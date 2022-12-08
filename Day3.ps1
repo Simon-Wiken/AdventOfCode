@@ -1,6 +1,89 @@
+
+
 Function advent {
 
+    #Gets all the data in a nice array
     $file_data = Get-Content "F:\Programmering\AdventOfCode\day3.txt";
+
+
+    ################## Day 2a ##################
+    $sum = 0;
+
+    for($i = 0; $i -lt $file_data.Length; $i++){
+
+        #Fetches the duplicate letter from each string
+        $dupe = findDuplicateLetters $($file_data[$i].Substring(0,$file_data[$i].Length/2)) $($file_data[$i].Substring($file_data[$i].Length/2,$file_data[$i].Length/2));
+
+        #Sums the value of the letter, adds 26 to the value if it's uppercase since hashmaps aren't case-sensitive
+        $sum = $sum + $(getLetterValues $dupe)
+    }
+
+
+
+    ################## Day 2b ##################
+    
+    $sum2 = 0;
+
+    #Gets the letter of every third string and puts into a single string
+    $day3bString = "";
+    for($i = 0; $i -lt $file_data.length; $i = $i + 3){
+        
+        $day3bString = $day3bString + $(searchUntillLast $file_data[$i..$($i+2)])
+    }
+
+    
+    for($i = 0; $i -lt $day3bString.length; $i++){
+
+        $dupe = $day3bString[$i];
+
+        $sum2 = $sum2 + $(getLetterValues $dupe)
+    }
+
+
+    #Writes the output
+    Write-Host("Result for Day 3a: $sum");
+    Write-Host("Result for Day 3b: $sum2");
+}
+
+
+
+#Function to find the duplicate character from the strings
+function findDuplicateLetters([String]$in1, [String]$in2){
+
+    $res = '';
+
+    for($i = 0; $i -lt $in1.length; $i++){
+        for($j = 0; $j -lt $in2.length; $j++){
+
+            #Using else-ifs instead of a series of ifs because Powershell is weird and breaking the step of the loop is hard lol
+            if($in1[$i] -cne $in2[$j]){
+                #break;
+            }
+            elseif($res -clike "*$($in1[$i])*"){
+                #break;
+            }
+            else{
+                $res = $res + $in1[$i];
+            }
+        }
+    }
+    return $res;
+}
+
+#Looks through a list of strings to find the one letter they have in common
+function searchUntillLast($stringList){
+
+    $stringList[1] = findDuplicateLetters $stringList[0] $stringList[1];
+
+    if($stringList[1].length -gt 1){
+        $stringList[1] = searchUntillLast $stringList[1..$($stringList.length - 1)]
+    }
+
+    return $stringList[1];
+}
+
+#Gets the value of a given letter
+function getLetterValues([String] $in){
 
     $ItemValues = @{
         'a' = 1;
@@ -31,47 +114,16 @@ Function advent {
         'z' = 26;
     }
 
-    $sum = 0;
+    $res = 0;
 
-    for($i = 0; $i -lt $file_data.Length; $i++){
-        $backpack = $file_data[$i];
-        
-        #Fetches the duplicate letter from each string
-        $dupe = findDuplicateFromSections($backpack);
-
-        #Sums the value of the letter, adds 26 to the value if it's uppercase since hashmaps aren't case-sensitive
-        if("$dupe" -ceq "$dupe".ToUpper()){
-            $sum = $sum + $ItemValues.item("$dupe") + 26;
-        }
-        else{
-            $sum = $sum + $ItemValues.item("$dupe");
-        }
+    if("$in" -ceq "$in".ToUpper()){
+        $res = $ItemValues.item("$in") + 26;
     }
-
-    Write-Output($sum);
-}
-
-
-#Function to find the duplicate character from the string
-Function findDuplicateFromSections([String] $in){
-
-    
-    $s1 = $in.Substring(0,$in.Length/2);
-    $s2 = $in.Substring($in.Length/2,$in.Length/2);
-
-    $res = '';
-    
-    for($i = 0; $i -lt $s1.Length; $i++){
-        for($j = 0; $j -lt $s2.Length; $j++){
-            if($s1[$i] -ceq $s2[$j]){
-                $res = $s1[$i];
-                break;
-            }
-        }
+    else{
+        $res = $ItemValues.item("$in");
     }
 
     return $res;
 }
-
 
 advent
